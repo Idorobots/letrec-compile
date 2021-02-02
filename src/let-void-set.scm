@@ -52,8 +52,14 @@
 
 (eval-after-conversion
  let-void-set-conversion
- '(letrec ((foo 23)
-           (bar (lambda (x) (+ x foo))))
+ '(letrec ((bar (lambda (x) (+ x foo)))
+           (foo 23))
+    (bar 5)))
+
+(eval-after-conversion
+ let-void-set-conversion
+ '(letrec* ((bar (lambda (x) (+ x foo)))
+            (foo 23))
     (bar 5)))
 
 (eval-after-conversion

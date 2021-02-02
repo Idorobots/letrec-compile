@@ -59,17 +59,25 @@
                                      (member b lambdas))))
                           bindings)))
     `(let ,simple
-       `(let ,(map (lambda (v)
-                     (list v '(void)))
-                   (bindings-vars complex))
-          ,(fix lambdas
-                `(begin ,@(map (lambda (b)
-                                 `(set! ,@b))
-                               complex)
-                        ,(letrec-body expr)))))))
+       (let ,(map (lambda (v)
+                    (list v '(void)))
+                  (bindings-vars complex))
+         ,(fix lambdas
+               `(begin ,@(map (lambda (b)
+                                `(set! ,@b))
+                              complex)
+                       ,(letrec-body expr)))))))
 
 (define (fixing-letrec-conversion expr)
-  (scc-reorder fixing-letrec expr))
+  (scc-reorder (if (letrec*? expr)
+                   (lambda (bindings)
+                     (let ((deps (derive-dependencies bindings)))
+                       (append deps
+                               (filter (lambda (e)
+                                         (not (member e deps)))
+                                       (derive-ordering bindings)))))
+                   derive-dependencies)
+               fixing-letrec expr))
 
 ;; Some examples:
 
@@ -91,8 +99,14 @@
 
 (eval-after-conversion
  fixing-letrec-conversion
- '(letrec ((foo 23)
-           (bar (lambda (x) (+ x foo))))
+ '(letrec ((bar (lambda (x) (+ x foo)))
+           (foo 23))
+    (bar 5)))
+
+(eval-after-conversion
+ fixing-letrec-conversion
+ '(letrec* ((bar (lambda (x) (+ x foo)))
+            (foo 23))
     (bar 5)))
 
 (eval-after-conversion

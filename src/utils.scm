@@ -18,6 +18,10 @@
   (and (list? expr)
        (equal? (car expr) 'letrec)))
 
+(define (letrec*? expr)
+  (and (list? expr)
+       (equal? (car expr) 'letrec*)))
+
 (define letrec-bindings let-bindings)
 
 (define letrec-body let-body)
@@ -61,7 +65,8 @@
          '())
         ((quote? expr) '())
         ((or (let? expr)
-             (letrec? expr))
+             (letrec? expr)
+             (letrec*? expr))
          (filter (lambda (v)
                    (not (member v (bindings-vars (let-bindings expr)))))
                  (free-vars (let-body expr))))

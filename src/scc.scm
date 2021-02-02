@@ -189,24 +189,43 @@
          body
          scc))
 
-(define (scc-reorder fixer expr)
+(define (derive-dependencies bindings)
+  (let ((vars (bindings-vars bindings)))
+    (foldl append
+           '()
+           (map (lambda (b)
+                  (map (lambda (e)
+                         (list (binding-var b) e))
+                       (filter (lambda (v)
+                                 (member v vars))
+                               (free-vars (binding-val b)))))
+                bindings))))
+
+(define (derive-ordering bindings)
+  (let ((vars (bindings-vars bindings)))
+    (if (not (empty? vars))
+        (map list
+             (cdr vars)
+             (reverse (cdr (reverse vars))))
+        '())))
+
+(define (scc-reorder deriver fixer expr)
   (let* ((bindings (letrec-bindings expr))
-         (vars (bindings-vars bindings))
-         (value-deps (foldl append
-                           '()
-                           (map (lambda (b)
-                                  (map (lambda (e)
-                                         (list (binding-var b) e))
-                                       (filter (lambda (v)
-                                                 (member v vars))
-                                               (free-vars (binding-val b)))))
-                                bindings)))
-         (dep-graph value-deps)
+         (dep-graph (deriver bindings))
          (scc (scc dep-graph)))
     (reorder-bindings fixer bindings (letrec-body expr) scc)))
 
 (define (scc-conversion expr)
-  (scc-reorder fixpoint-conversion expr))
+  (scc-reorder (if (letrec*? expr)
+                   (lambda (bindings)
+                     (let ((deps (derive-dependencies bindings)))
+                       (append deps
+                               (filter (lambda (e)
+                                         (not (member e deps)))
+                                       (derive-ordering bindings)))))
+                   derive-dependencies)
+               fixpoint-conversion
+               expr))
 
 ;; Some examples:
 
@@ -228,8 +247,14 @@
 
 (eval-after-conversion
  scc-conversion
- '(letrec ((foo 23)
-           (bar (lambda (x) (+ x foo))))
+ '(letrec ((bar (lambda (x) (+ x foo)))
+           (foo 23))
+    (bar 5)))
+
+(eval-after-conversion
+ scc-conversion
+ '(letrec* ((bar (lambda (x) (+ x foo)))
+            (foo 23))
     (bar 5)))
 
 (eval-after-conversion
