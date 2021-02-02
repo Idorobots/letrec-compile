@@ -77,7 +77,8 @@
                                          (not (member e deps)))
                                        (derive-ordering bindings)))))
                    derive-dependencies)
-               fixing-letrec expr))
+               fixing-letrec
+               expr))
 
 ;; Some examples:
 
@@ -149,6 +150,14 @@
           (odd? 23)
           (even? 4)
           (odd? 4))))
+
+(eval-after-conversion
+ fixing-letrec-conversion
+ '(letrec ((f (lambda () (even? 5)))
+           (even? (lambda (x)(or (zero? x) (odd? (- x 1)))))
+           (odd? (lambda (x) (not (even? x))))
+           (t (f)))
+    t))
 
 (eval-after-conversion
  fixing-letrec-conversion

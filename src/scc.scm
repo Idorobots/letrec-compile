@@ -300,6 +300,14 @@
 
 (eval-after-conversion
  scc-conversion
+ '(letrec ((f (lambda () (even? 5)))
+           (even? (lambda (x)(or (zero? x) (odd? (- x 1)))))
+           (odd? (lambda (x) (not (even? x))))
+           (t (f)))
+    t))
+
+(eval-after-conversion
+ scc-conversion
  '(letrec ((one (lambda ()
                   (+ 1 (two))))
            (two (lambda ()
