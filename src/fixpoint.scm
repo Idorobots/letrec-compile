@@ -228,6 +228,51 @@
 
 (eval-after-conversion
  fixpoint-conversion
+ '(letrec () '()))
+
+(eval-after-conversion
+ fixpoint-conversion
+ '(letrec ((foo 23)
+           (bar (+ 5 foo)))
+    bar))
+
+(eval-after-conversion
+ fixpoint-conversion
+ '(letrec ((foo 23)
+           (bar (lambda (x) (+ x foo))))
+    (bar 5)))
+
+(eval-after-conversion
+ fixpoint-conversion
+ '(letrec ((foo (lambda (x) (* x 23)))
+           (bar (lambda (y) (foo y))))
+    (bar 23)))
+
+;; NOTE Never finishes.
+(unless #t
+  (eval-after-conversion
+   fixpoint-conversion
+   '(letrec ((foo (lambda () (foo)))) (foo))))
+
+;; NOTE Never finishes.
+(unless #t
+  (eval-after-conversion
+   fixpoint-conversion
+   '(letrec ((foo (lambda () (bar)))
+             (bar (lambda () (foo))))
+      (foo))))
+
+(eval-after-conversion
+ fixpoint-conversion
+ '(letrec ((a (lambda () (b)))
+           (b (lambda () (begin (c) (d))))
+           (c (lambda () (a)))
+           (d (lambda () (e)))
+           (e (lambda () 23)))
+    (d)))
+
+(eval-after-conversion
+ fixpoint-conversion
  '(letrec ((even? (lambda (x)
                     (or (zero? x)
                         (odd? (- x 1)))))

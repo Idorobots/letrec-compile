@@ -41,7 +41,52 @@
     'body))
 
 (eval-after-conversion
- letrec-convert
+ let-void-set-conversion
+ '(letrec () '()))
+
+(eval-after-conversion
+ let-void-set-conversion
+ '(letrec ((foo 23)
+           (bar (+ 5 foo)))
+    bar))
+
+(eval-after-conversion
+ let-void-set-conversion
+ '(letrec ((foo 23)
+           (bar (lambda (x) (+ x foo))))
+    (bar 5)))
+
+(eval-after-conversion
+ let-void-set-conversion
+ '(letrec ((foo (lambda (x) (* x 23)))
+           (bar (lambda (y) (foo y))))
+    (bar 23)))
+
+;; NOTE Never finishes.
+(unless #t
+  (eval-after-conversion
+   let-void-set-conversion
+   '(letrec ((foo (lambda () (foo)))) (foo))))
+
+;; NOTE Never finishes.
+(unless #t
+  (eval-after-conversion
+   let-void-set-conversion
+   '(letrec ((foo (lambda () (bar)))
+             (bar (lambda () (foo))))
+      (foo))))
+
+(eval-after-conversion
+ let-void-set-conversion
+ '(letrec ((a (lambda () (b)))
+           (b (lambda () (begin (c) (d))))
+           (c (lambda () (a)))
+           (d (lambda () (e)))
+           (e (lambda () 23)))
+    (d)))
+
+(eval-after-conversion
+ let-void-set-conversion
  '(letrec ((even? (lambda (x)
                     (or (zero? x)
                         (odd? (- x 1)))))

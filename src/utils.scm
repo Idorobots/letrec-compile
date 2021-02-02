@@ -56,7 +56,7 @@
         ((or (let? expr)
              (letrec? expr))
          (filter (lambda (v)
-                   (not (member v (binder-vars (let-binders expr)))))
+                   (not (member v (bindings-vars (let-bindings expr)))))
                  (free-vars (let-body expr))))
         ((lambda? expr)
          (filter (lambda (v)
@@ -69,16 +69,16 @@
 
 ;; Some examples:
 
-;; (free-vars '())
+(free-vars '())
 ;; '()
 
-;; (free-vars 'foo)
+(free-vars 'foo)
 ;; '(foo)
 
-;; (free-vars '(list 23 foo))
+(free-vars '(list 23 foo))
 ;; '(list foo)
 
-;;(free-vars '(lambda (foo) (list 23 foo)))
+(free-vars '(lambda (foo) (list 23 foo)))
 ;; '(list)
 
 ;; Evaluation helper
