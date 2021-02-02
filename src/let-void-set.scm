@@ -37,8 +37,8 @@
 (eval-after-conversion
  let-void-set-conversion
  '(letrec ((foo 'foo-value)
-          (bar 'bar-value))
-   'body))
+           (bar 'bar-value))
+    'body))
 
 (eval-after-conversion
  letrec-convert
@@ -51,3 +51,23 @@
           (odd? 23)
           (even? 4)
           (odd? 4))))
+
+(eval-after-conversion
+ let-void-set-conversion
+ '(letrec ((one (lambda ()
+                  (+ 1 (two))))
+           (two (lambda ()
+                  (+ 2 (three))))
+           (three (lambda ()
+                    3)))
+    (one)))
+
+(time
+ (eval-after-conversion
+  let-void-set-conversion
+  '(letrec ((fib (lambda (n)
+                   (if (< n 1)
+                       1
+                       (+ (fib (- n 1))
+                          (fib (- n 2)))))))
+     (fib 35))))

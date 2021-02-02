@@ -46,6 +46,43 @@
 (define (bindings-vals bindings)
   (map binding-val bindings))
 
+;; Free variables computation:
+
+(define (free-vars expr)
+  (cond ((symbol? expr)
+         (list expr))
+        ((null? expr)
+         '())
+        ((or (let? expr)
+             (letrec? expr))
+         (filter (lambda (v)
+                   (not (member v (binder-vars (let-binders expr)))))
+                 (free-vars (let-body expr))))
+        ((lambda? expr)
+         (filter (lambda (v)
+                   (not (member v (lambda-vars expr))))
+                 (free-vars (lambda-body expr))))
+        ((pair? expr)
+         (append (free-vars (car expr))
+                 (free-vars (cdr expr))))
+        (else '())))
+
+;; Some examples:
+
+;; (free-vars '())
+;; '()
+
+;; (free-vars 'foo)
+;; '(foo)
+
+;; (free-vars '(list 23 foo))
+;; '(list foo)
+
+;;(free-vars '(lambda (foo) (list 23 foo)))
+;; '(list)
+
+;; Evaluation helper
+
 (define (eval-after-conversion f expr)
   (display "Expression:") (newline)
   (pretty-print expr) (newline)
