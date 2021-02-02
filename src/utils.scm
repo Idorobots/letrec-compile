@@ -46,6 +46,12 @@
 (define (bindings-vals bindings)
   (map binding-val bindings))
 
+;; (quote ...)
+
+(define (quote? expr)
+  (and (list? expr)
+       (equal? (car expr) 'quote)))
+
 ;; Free variables computation:
 
 (define (free-vars expr)
@@ -53,6 +59,7 @@
          (list expr))
         ((null? expr)
          '())
+        ((quote? expr) '())
         ((or (let? expr)
              (letrec? expr))
          (filter (lambda (v)

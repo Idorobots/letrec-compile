@@ -174,14 +174,14 @@
       (member (binding-var (car bindings))
               (free-vars (binding-val (car bindings))))))
 
-(define (reorder-bindings bindings body scc)
+(define (reorder-bindings fixer bindings body scc)
   (foldr (lambda (component acc)
            (let ((bs (filter (lambda (b)
                                (member (binding-var b)
                                        component))
                              bindings)))
              (if (recoursive? bs)
-                 (fixpoint-conversion
+                 (fixer
                   `(letrec ,bs
                      ,acc))
                  `(let ,bs
@@ -189,10 +189,10 @@
          body
          scc))
 
-(define (scc-conversion expr)
+(define (scc-reorder fixer expr)
   (let* ((bindings (letrec-bindings expr))
          (vars (bindings-vars bindings))
-         (dep-graph (foldl append
+         (value-deps (foldl append
                            '()
                            (map (lambda (b)
                                   (map (lambda (e)
@@ -201,8 +201,12 @@
                                                  (member v vars))
                                                (free-vars (binding-val b)))))
                                 bindings)))
+         (dep-graph value-deps)
          (scc (scc dep-graph)))
-    (reorder-bindings bindings (letrec-body expr) scc)))
+    (reorder-bindings fixer bindings (letrec-body expr) scc)))
+
+(define (scc-conversion expr)
+  (scc-reorder fixpoint-conversion expr))
 
 ;; Some examples:
 
