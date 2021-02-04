@@ -38,11 +38,6 @@
 (load "fixpoint.scm")
 (load "let-void-set.scm")
 
-(define (simple? expr)
-  (or (number? expr)
-      (string? expr)
-      (quote? expr)))
-
 (define (fixing-letrec fix let-void-set expr)
   (let* ((bindings (letrec-bindings expr))
          (simple (filter (lambda (b)
@@ -55,12 +50,17 @@
                             (not (or (member b simple)
                                      (member b lambdas))))
                           bindings))
-         (lambdas-builder (if (empty? lambdas)
-                              identity
-                              (lambda (body)
-                                (fix
-                                 `(letrec ,lambdas
-                                    ,body)))))
+         (lambdas-builder (cond ((empty? lambdas)
+                                 identity)
+                                ((not (recoursive? lambdas))
+                                 (lambda (body)
+                                   `(let ,lambdas
+                                      ,body)))
+                                (else
+                                 (lambda (body)
+                                   (fix
+                                    `(letrec ,lambdas
+                                       ,body))))))
          (complex-builder (if (empty? complex)
                               lambdas-builder
                               (lambda (body)

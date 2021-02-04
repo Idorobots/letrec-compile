@@ -164,11 +164,14 @@
   (map (lambda (v l)
          (list v
                (let* ((body (lambda-body l))
-                      (free-vars (free-vars body)))
+                      (free-vars (free-vars body))
+                      (reconstructed (postprocess (filter-unused (rebound-vars vars) free-vars))))
                  `(lambda ,vars
                     (lambda ,(lambda-vars l)
-                      (let ,(postprocess (filter-unused (rebound-vars vars) free-vars))
-                        ,body))))))
+                      ,(if (empty? reconstructed)
+                           body
+                           `(let ,reconstructed
+                              ,body)))))))
        vars
        lambdas))
 
@@ -210,13 +213,18 @@
                (rest-bindings (filter-bindings (compose not lambda?) bindings))
                (rest-vars (bindings-vars rest-bindings))
                (vars (bindings-vars bindings))
-               (body-free-vars (free-vars body)))
-          `(let ,(rewrapped-lambdas vars
+               (body-free-vars (free-vars body))
+               (let-builder (lambda (bindings body)
+                              (if (empty? bindings)
+                                  body
+                                  `(let ,bindings
+                                     ,body)))))
+          (let-builder (rewrapped-lambdas vars
                                     (bindings-vals ((thunkify rest-vars) bindings))
                                     (forcify rest-vars))
-             (let ,((forcify rest-vars)
-                    (filter-unused (rebound-vars vars) body-free-vars))
-               ,body))))))
+                       (let-builder ((forcify rest-vars)
+                                     (filter-unused (rebound-vars vars) body-free-vars))
+                                    body))))))
 
 ;; Some examples:
 

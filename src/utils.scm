@@ -56,14 +56,22 @@
   (and (list? expr)
        (equal? (car expr) 'quote)))
 
+(define (simple? expr)
+  (or (number? expr)
+      (string? expr)
+      (quote? expr)))
+
+(define (value? expr)
+  (or (lambda? expr)
+      (simple? expr)))
+
 ;; Free variables computation:
 
 (define (free-vars expr)
   (cond ((symbol? expr)
          (list expr))
-        ((null? expr)
+        ((simple? expr)
          '())
-        ((quote? expr) '())
         ((or (let? expr)
              (letrec? expr)
              (letrec*? expr))
