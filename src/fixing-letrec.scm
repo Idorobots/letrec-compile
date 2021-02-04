@@ -36,17 +36,14 @@
 (load "utils.scm")
 (load "scc.scm")
 (load "fixpoint.scm")
+(load "let-void-set.scm")
 
 (define (simple? expr)
   (or (number? expr)
       (string? expr)
       (quote? expr)))
 
-(define (fix bindings body)
-  ;; NOTE Ideally this just creates a (fix bindings body) construct that is later handled efficiently by the closure conversion phase.
-  (fixpoint-conversion `(letrec ,bindings ,body)))
-
-(define (fixing-letrec expr)
+(define (fixing-letrec fix let-void-set expr)
   (let* ((bindings (letrec-bindings expr))
          (simple (filter (lambda (b)
                            (simple? (binding-val b)))
@@ -57,27 +54,36 @@
          (complex (filter (lambda (b)
                             (not (or (member b simple)
                                      (member b lambdas))))
-                          bindings)))
-    `(let ,simple
-       (let ,(map (lambda (v)
-                    (list v '(void)))
-                  (bindings-vars complex))
-         ,(fix lambdas
-               `(begin ,@(map (lambda (b)
-                                `(set! ,@b))
-                              complex)
-                       ,(letrec-body expr)))))))
+                          bindings))
+         (lambdas-builder (if (empty? lambdas)
+                              identity
+                              (lambda (body)
+                                (fix
+                                 `(letrec ,lambdas
+                                    ,body)))))
+         (complex-builder (if (empty? complex)
+                              lambdas-builder
+                              (lambda (body)
+                                (let ((conv (let-void-set `(letrec ,complex
+                                                             ,body))))
+                                  (list (car conv) (letrec-bindings conv)
+                                        (lambdas-builder
+                                         (letrec-body conv)))))))
+         (simple-builder (if (empty? simple)
+                             identity
+                             (lambda (body)
+                               `(let ,simple
+                                  ,body)))))
+    (simple-builder
+     (complex-builder
+      (letrec-body expr)))))
 
 (define (fixing-letrec-conversion expr)
-  (scc-reorder (if (letrec*? expr)
-                   (lambda (bindings)
-                     (let ((deps (derive-dependencies bindings)))
-                       (append deps
-                               (filter (lambda (e)
-                                         (not (member e deps)))
-                                       (derive-ordering bindings)))))
-                   derive-dependencies)
-               fixing-letrec
+  (scc-reorder (derive-graph expr)
+               (lambda (expr)
+                 (fixing-letrec fixpoint-conversion ;; NOTE Ideally this just creates a (fix bindings body) construct that is later handled efficiently by the closure conversion phase.
+                                let-void-set-conversion
+                                expr))
                expr))
 
 ;; Some examples:

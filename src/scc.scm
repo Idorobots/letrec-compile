@@ -215,15 +215,18 @@
          (scc (scc dep-graph)))
     (reorder-bindings fixer bindings (letrec-body expr) scc)))
 
+(define (derive-graph expr)
+  (if (letrec*? expr)
+      (lambda (bindings)
+        (let ((deps (derive-dependencies bindings)))
+          (append deps
+                  (filter (lambda (e)
+                            (not (member e deps)))
+                          (derive-ordering bindings)))))
+      derive-dependencies))
+
 (define (scc-conversion expr)
-  (scc-reorder (if (letrec*? expr)
-                   (lambda (bindings)
-                     (let ((deps (derive-dependencies bindings)))
-                       (append deps
-                               (filter (lambda (e)
-                                         (not (member e deps)))
-                                       (derive-ordering bindings)))))
-                   derive-dependencies)
+  (scc-reorder (derive-graph expr)
                fixpoint-conversion
                expr))
 
