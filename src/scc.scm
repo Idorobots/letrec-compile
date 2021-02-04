@@ -251,13 +251,13 @@
 (eval-after-conversion
  scc-conversion
  '(letrec ((bar (lambda (x) (+ x foo)))
-           (foo 23))
+           (foo (+ 23 5)))
     (bar 5)))
 
 (eval-after-conversion
  scc-conversion
  '(letrec* ((bar (lambda (x) (+ x foo)))
-            (foo 23))
+            (foo (+ 23 5)))
     (bar 5)))
 
 (eval-after-conversion

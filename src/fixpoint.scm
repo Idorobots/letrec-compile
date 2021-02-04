@@ -238,8 +238,14 @@
 
 (eval-after-conversion
  fixpoint-conversion
- '(letrec ((foo 23)
-           (bar (lambda (x) (+ x foo))))
+ '(letrec ((bar (lambda (x) (+ x foo)))
+           (foo (+ 23 5)))
+    (bar 5)))
+
+(eval-after-conversion
+ fixpoint-conversion
+ '(letrec* ((bar (lambda (x) (+ x foo)))
+            (foo (+ 23 5)))
     (bar 5)))
 
 (eval-after-conversion

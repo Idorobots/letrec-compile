@@ -53,13 +53,13 @@
 (eval-after-conversion
  let-void-set-conversion
  '(letrec ((bar (lambda (x) (+ x foo)))
-           (foo 23))
+           (foo (+ 23 5)))
     (bar 5)))
 
 (eval-after-conversion
  let-void-set-conversion
  '(letrec* ((bar (lambda (x) (+ x foo)))
-            (foo 23))
+            (foo (+ 23 5)))
     (bar 5)))
 
 (eval-after-conversion
