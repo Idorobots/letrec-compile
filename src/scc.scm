@@ -202,22 +202,15 @@
                 bindings))))
 
 (define (derive-ordering bindings)
-  (let ((vars (bindings-vars bindings)))
+  (let ((vars (bindings-vars
+               ;; NOTE Straight up values cannot side-effect, so we don't need to preserve their ordering.
+               (filter (compose not value? binding-val)
+                       bindings))))
     (if (not (empty? vars))
         (map list
              (cdr vars)
              (reverse (cdr (reverse vars))))
         '())))
-
-(define (scc-reorder deriver fixer expr)
-  (let* ((bindings (letrec-bindings expr))
-         (body (letrec-body expr))
-         (dep-graph (deriver bindings))
-         (scc (scc dep-graph)))
-    (if (empty? scc)
-        `(let ,bindings
-           ,body)
-        (reorder-bindings fixer bindings body scc))))
 
 (define (derive-graph expr)
   (if (letrec*? expr)
@@ -228,6 +221,16 @@
                             (not (member e deps)))
                           (derive-ordering bindings)))))
       derive-dependencies))
+
+(define (scc-reorder deriver fixer expr)
+  (let* ((bindings (letrec-bindings expr))
+         (body (letrec-body expr))
+         (dep-graph (deriver bindings))
+         (scc (scc dep-graph)))
+    (if (empty? scc)
+        `(let ,bindings
+           ,body)
+        (reorder-bindings fixer bindings body scc))))
 
 (define (scc-conversion expr)
   (scc-reorder (derive-graph expr)
