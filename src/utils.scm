@@ -57,7 +57,8 @@
        (equal? (car expr) 'quote)))
 
 (define (simple? expr)
-  (or (number? expr)
+  (or (null? expr)
+      (number? expr)
       (string? expr)
       (quote? expr)))
 
@@ -90,27 +91,15 @@
                  (free-vars (cdr expr))))
         (else '())))
 
-;; Some examples:
-
-(free-vars '())
-;; '()
-
-(free-vars 'foo)
-;; '(foo)
-
-(free-vars '(list 23 foo))
-;; '(list foo)
-
-(free-vars '(lambda (foo) (list 23 foo)))
-;; '(list)
-
 ;; Evaluation helper
 
 (define (eval-after-conversion f expr)
   (display "Expression:") (newline)
   (pretty-print expr) (newline)
   (display "Conversion:") (newline)
-  (let ((result (f expr)))
-    (pretty-print result) (newline)
+  (let ((converted (f expr)))
+    (pretty-print converted) (newline)
     (display "Result:") (newline)
-    (pretty-print (eval result)) (newline)))
+    (let ((result (eval converted)))
+      (pretty-print result) (newline)
+      result)))

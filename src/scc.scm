@@ -107,87 +107,7 @@
          (scc (cadr assigned)))
     (group scc)))
 
-;; Some tests:
-
-;;   a
-;;  / \
-;; b---c
-;; |
-;; d---e
-(scc '((a b)
-       (b d)
-       (b c)
-       (c a)
-       (d e)
-       (e)))
-;; '((a b c) (d) (e))
-
-(scc '((c a)
-       (a b)
-       (b c)
-       (b d)
-       (d e)
-       (e)))
-;; '((a b c) (d) (e))
-
-(scc '((d e)
-       (c a)
-       (a b)
-       (b c)
-       (b d)
-       (e)))
-;; '((a b c) (d) (e))
-
-;;   a
-;;  / \
-;; b---c
-;;
-;; d---e
-(scc '((a b)
-       (b c)
-       (c a)
-       (d e)
-       (e)))
-;; '((d) (e) (a b c))
-
-;;   a---b---c---d---e
-(scc '((a b)
-       (b c)
-       (c d)
-       (d e)
-       (e)))
-;; '((a) (b) (c) (d) (e))
-
-;;   a---b---c---d---e
-;;    \_____________/
-(scc '((a b)
-       (b c)
-       (c d)
-       (d e)
-       (e a)))
-;; '((a b c d e))
-
-;; The actual conversion:
-
-(define (recoursive? bindings)
-  (or (> (length bindings) 1)
-      (member (binding-var (car bindings))
-              (free-vars (binding-val (car bindings))))))
-
-(define (reorder-bindings fixer bindings body scc)
-  (foldr (lambda (component acc)
-           (let ((bs (filter (lambda (b)
-                               (member (binding-var b)
-                                       component))
-                             bindings)))
-             (if (recoursive? bs)
-                 (fixer
-                  `(letrec ,bs
-                     ,acc))
-                 `(let ,bs
-                    ,acc))))
-         body
-         scc))
+;; Dependency derivation::
 
 (define (derive-dependencies bindings)
   (let ((vars (bindings-vars bindings)))
@@ -222,6 +142,28 @@
                           (derive-ordering bindings)))))
       derive-dependencies))
 
+;; Reordering:
+
+(define (recoursive? bindings)
+  (or (> (length bindings) 1)
+      (member (binding-var (car bindings))
+              (free-vars (binding-val (car bindings))))))
+
+(define (reorder-bindings fixer bindings body scc)
+  (foldr (lambda (component acc)
+           (let ((bs (filter (lambda (b)
+                               (member (binding-var b)
+                                       component))
+                             bindings)))
+             (if (recoursive? bs)
+                 (fixer
+                  `(letrec ,bs
+                     ,acc))
+                 `(let ,bs
+                    ,acc))))
+         body
+         scc))
+
 (define (scc-reorder deriver fixer expr)
   (let* ((bindings (letrec-bindings expr))
          (body (letrec-body expr))
@@ -236,102 +178,3 @@
   (scc-reorder (derive-graph expr)
                fixpoint-conversion
                expr))
-
-;; Some examples:
-
-(eval-after-conversion
- scc-conversion
- '(letrec ((foo 'foo-value)
-           (bar 'bar-value))
-    'body))
-
-(eval-after-conversion
- scc-conversion
- '(letrec () '()))
-
-(eval-after-conversion
- scc-conversion
- '(letrec ((foo 23)
-           (bar (+ 5 foo)))
-    bar))
-
-(eval-after-conversion
- scc-conversion
- '(letrec ((bar (lambda (x) (+ x foo)))
-           (foo (+ 23 5)))
-    (bar 5)))
-
-(eval-after-conversion
- scc-conversion
- '(letrec* ((bar (lambda (x) (+ x foo)))
-            (foo (+ 23 5)))
-    (bar 5)))
-
-(eval-after-conversion
- scc-conversion
- '(letrec ((foo (lambda (x) (* x 23)))
-           (bar (lambda (y) (foo y))))
-    (bar 23)))
-
-;; NOTE Never finishes.
-(unless #t
-  (eval-after-conversion
-   scc-conversion
-   '(letrec ((foo (lambda () (foo)))) (foo))))
-
-;; NOTE Never finishes.
-(unless #t
-  (eval-after-conversion
-   scc-conversion
-   '(letrec ((foo (lambda () (bar)))
-             (bar (lambda () (foo))))
-      (foo))))
-
-(eval-after-conversion
- scc-conversion
- '(letrec ((a (lambda () (b)))
-           (b (lambda () (begin (c) (d))))
-           (c (lambda () (a)))
-           (d (lambda () (e)))
-           (e (lambda () 23)))
-    (d)))
-
-(eval-after-conversion
- scc-conversion
- '(letrec ((even? (lambda (x)
-                    (or (zero? x)
-                        (odd? (- x 1)))))
-           (odd? (lambda (x)
-                   (not (even? x)))))
-    (list (even? 23)
-          (odd? 23)
-          (even? 4)
-          (odd? 4))))
-
-(eval-after-conversion
- scc-conversion
- '(letrec ((f (lambda () (even? 5)))
-           (even? (lambda (x)(or (zero? x) (odd? (- x 1)))))
-           (odd? (lambda (x) (not (even? x))))
-           (t (f)))
-    t))
-
-(eval-after-conversion
- scc-conversion
- '(letrec ((one (lambda ()
-                  (+ 1 (two))))
-           (two (lambda ()
-                  (+ 2 (three))))
-           (three (lambda ()
-                    3)))
-    (one)))
-
-(time
- (eval-after-conversion
-  scc-conversion
-  '(letrec ((fib (lambda (n)
-                   (if (< n 1)
-                       1
-                       (+ (fib (- n 1))
-                          (fib (- n 2)))))))
-     (fib 35))))
