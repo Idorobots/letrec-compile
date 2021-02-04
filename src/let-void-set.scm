@@ -23,14 +23,19 @@
 
 (define (let-void-set-conversion expr)
   (let* ((bindings (letrec-bindings expr))
-         (vars (bindings-vars bindings)))
-    `(let ,(map (lambda (v)
-                  (list v '(void)))
-                vars)
-       ,@(map (lambda (b)
-                `(set! ,@b))
-              bindings)
-       ,(letrec-body expr))))
+         (vars (bindings-vars bindings))
+         (body (letrec-body expr))
+         (voids (map (lambda (v)
+                       (list v '(void)))
+                     vars))
+         (setters (map (lambda (b)
+                         `(set! ,@b))
+                       bindings)))
+    (if (empty? setters)
+        body
+        `(let ,voids
+           (begin ,@setters
+                  ,body)))))
 
 ;; Some examples:
 

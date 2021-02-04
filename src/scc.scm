@@ -211,9 +211,13 @@
 
 (define (scc-reorder deriver fixer expr)
   (let* ((bindings (letrec-bindings expr))
+         (body (letrec-body expr))
          (dep-graph (deriver bindings))
          (scc (scc dep-graph)))
-    (reorder-bindings fixer bindings (letrec-body expr) scc)))
+    (if (empty? scc)
+        `(let ,bindings
+           ,body)
+        (reorder-bindings fixer bindings body scc))))
 
 (define (derive-graph expr)
   (if (letrec*? expr)
