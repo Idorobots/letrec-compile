@@ -150,9 +150,9 @@
 
 (load "utils.scm")
 
-(define (rebound-vars vars)
+(define (rebound-vars vars all-vars)
   (map (lambda (v)
-         (list v (cons v vars)))
+         (list v (cons v all-vars)))
        vars))
 
 (define (filter-unused bindings free-vars)
@@ -160,12 +160,12 @@
             (member (binding-var b) free-vars))
           bindings))
 
-(define (rewrapped-lambdas vars lambdas postprocess)
+(define (rewrapped-lambdas vars lambdas rebound)
   (map (lambda (v l)
          (list v
                (let* ((body (lambda-body l))
                       (free-vars (free-vars body))
-                      (reconstructed (postprocess (filter-unused (rebound-vars vars) free-vars))))
+                      (reconstructed (filter-unused rebound free-vars)))
                  `(lambda ,vars
                     (lambda ,(lambda-vars l)
                       ,(if (empty? reconstructed)
@@ -194,14 +194,11 @@
                b))
          bindings)))
 
-(define (forcify only-these)
-  (lambda (bindings)
-    (map (lambda (b)
-           (if (member (car b) only-these)
-               (list (car b)
-                     `(,(cadr b)))
-               b))
-         bindings)))
+(define (forcified-vars vars all-vars)
+  (map (lambda (b)
+         (list (car b)
+               `(,(cadr b))))
+       (rebound-vars vars all-vars)))
 
 (define (fixpoint-conversion expr)
   (let ((bindings (letrec-bindings expr))
@@ -213,6 +210,8 @@
                (rest-bindings (filter-bindings (compose not lambda?) bindings))
                (rest-vars (bindings-vars rest-bindings))
                (vars (bindings-vars bindings))
+               (rebound (append (rebound-vars lambda-vars vars)
+                                (forcified-vars rest-vars vars)))
                (body-free-vars (free-vars body))
                (let-builder (lambda (bindings body)
                               (if (empty? bindings)
@@ -220,8 +219,7 @@
                                   `(let ,bindings
                                      ,body)))))
           (let-builder (rewrapped-lambdas vars
-                                    (bindings-vals ((thunkify rest-vars) bindings))
-                                    (forcify rest-vars))
-                       (let-builder ((forcify rest-vars)
-                                     (filter-unused (rebound-vars vars) body-free-vars))
+                                          (bindings-vals ((thunkify rest-vars) bindings))
+                                          rebound)
+                       (let-builder (filter-unused rebound body-free-vars)
                                     body))))))

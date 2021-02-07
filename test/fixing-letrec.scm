@@ -86,6 +86,19 @@
         (one)))
     6)
 
+(is (eval-after-conversion
+     fixing-letrec-conversion
+     '(letrec ((lazy-23 (cons 23 (lambda () lazy-23)))
+               (lazy-take (lambda (list n)
+                            (if (zero? n)
+                                '()
+                                (cons (car list)
+                                      (lazy-take ((cdr list))
+                                                 (- n 1))))))
+               (bar (foldl + 0 (lazy-take lazy-23 5))))
+        bar))
+    (* 5 23))
+
 ;; Some timings:
 
 (is (time
