@@ -9,7 +9,8 @@
 ;; |
 ;; d---e
 
-(is (scc '((a b)
+(is (scc '(a b c d e)
+         '((a b)
            (b d)
            (b c)
            (c a)
@@ -17,21 +18,23 @@
            (e)))
     '((e) (d) (a c b)))
 
-(is (scc '((c a)
+(is (scc '(a b c d e)
+         '((c a)
            (a b)
            (b c)
            (b d)
            (d e)
            (e)))
-    '((e) (d) (c b a)))
+    '((e) (d) (a c b)))
 
-(is (scc '((d e)
+(is (scc '(a b c d e)
+         '((d e)
            (c a)
            (a b)
            (b c)
            (b d)
            (e)))
-    '((e) (d) (c b a)))
+    '((e) (d) (a c b)))
 
 ;;   a
 ;;  / \
@@ -39,7 +42,8 @@
 ;;
 ;; d---e
 
-(is (scc '((a b)
+(is (scc '(a b c d e)
+         '((a b)
            (b c)
            (c a)
            (d e)
@@ -48,7 +52,8 @@
 
 ;;   a---b---c---d---e
 
-(is (scc '((a b)
+(is (scc '(a b c d e)
+         '((a b)
            (b c)
            (c d)
            (d e)
@@ -58,7 +63,8 @@
 ;;   a---b---c---d---e
 ;;    \_____________/
 
-(is (scc '((a b)
+(is (scc '(a b c d e)
+         '((a b)
            (b c)
            (c d)
            (d e)
@@ -162,19 +168,19 @@
                                                  (- n 1))))))
                (bar (foldl + 0 (lazy-take lazy-23 5))))
         bar))
-    '(let ((lazy-take (lambda (lazy-take)
-                        (lambda (list n)
-                          (let ((lazy-take (lazy-take lazy-take)))
-                            (if (zero? n)
-                                (quote ())
-                                (cons (car list)
-                                      (lazy-take ((cdr list)) (- n 1)))))))))
-       (let ((lazy-take (lazy-take lazy-take)))
-         (let ((lazy-23 (lambda (lazy-23)
-                          (lambda ()
-                            (let ((lazy-23 ((lazy-23 lazy-23))))
-                              (cons 23 (lambda () lazy-23)))))))
-           (let ((lazy-23 ((lazy-23 lazy-23))))
+    '(let ((lazy-23 (lambda (lazy-23)
+                      (lambda ()
+                        (let ((lazy-23 ((lazy-23 lazy-23))))
+                          (cons 23 (lambda () lazy-23)))))))
+       (let ((lazy-23 ((lazy-23 lazy-23))))
+         (let ((lazy-take (lambda (lazy-take)
+                            (lambda (list n)
+                              (let ((lazy-take (lazy-take lazy-take)))
+                                (if (zero? n)
+                                    (quote ())
+                                    (cons (car list)
+                                          (lazy-take ((cdr list)) (- n 1)))))))))
+           (let ((lazy-take (lazy-take lazy-take)))
              (let ((bar (foldl + 0 (lazy-take lazy-23 5))))
                bar))))))
 

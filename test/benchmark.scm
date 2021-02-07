@@ -15,7 +15,7 @@
                        (+ (fib (- n one))
                           (fib (- n two))))))
             (result (fib 37)))
-     (is result 63245986))) ;; FIXME SCC currently cuts the expected var out.
+     (is result expected)))
 
 ;; Some timings:
 

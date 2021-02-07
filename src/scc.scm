@@ -92,9 +92,8 @@
 
 ;; SCC according to the Kosaraju's algorithm:
 
-(define (scc graph)
-  (let* ((verts (map car graph))
-         (visited (foldl (lambda (v acc)
+(define (scc verts graph)
+  (let* ((visited (foldl (lambda (v acc)
                            (visit v (car acc) (cadr acc) graph))
                          (list '() '())
                          verts))
@@ -168,7 +167,7 @@
   (let* ((bindings (letrec-bindings expr))
          (body (letrec-body expr))
          (dep-graph (deriver bindings))
-         (scc (scc dep-graph)))
+         (scc (scc (bindings-vars bindings) dep-graph)))
     (if (empty? scc)
         `(let ,bindings
            ,body)
