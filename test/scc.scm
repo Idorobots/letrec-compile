@@ -150,19 +150,6 @@
         (one)))
     6)
 
-;; Some timings:
-
-(is (time
-     (eval-after-conversion
-      scc-conversion
-      '(letrec ((fib (lambda (n)
-                       (if (< n 1)
-                           1
-                           (+ (fib (- n 1))
-                              (fib (- n 2)))))))
-         (fib 35))))
-    24157817)
-
 ;; Can't run these as these produce infinite loops.
 
 (is (scc-conversion

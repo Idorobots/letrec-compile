@@ -90,7 +90,7 @@
 (define (ref-conversion expr)
   (scc-reorder (derive-graph expr)
                (lambda (expr)
-                 (fixing-letrec let-ref-fix
-                                let-ref-fix
-                                expr))
+                 (waddell let-ref-fix
+                          let-ref-fix
+                          expr))
                expr))

@@ -38,7 +38,7 @@
 (load "fixpoint.scm")
 (load "let-void-set.scm")
 
-(define (fixing-letrec fix let-void-set expr)
+(define (waddell fix let-void-set expr)
   (let* ((bindings (letrec-bindings expr))
          (simple (filter (lambda (b)
                            (simple? (binding-val b)))
@@ -78,10 +78,12 @@
      (complex-builder
       (letrec-body expr)))))
 
+(define (fixing-letrec expr)
+  (waddell fixpoint-conversion ;; NOTE Ideally this just creates a (fix bindings body) construct that is later handled efficiently by the closure conversion phase.
+           let-void-set-conversion
+           expr))
+
 (define (fixing-letrec-conversion expr)
   (scc-reorder (derive-graph expr)
-               (lambda (expr)
-                 (fixing-letrec fixpoint-conversion ;; NOTE Ideally this just creates a (fix bindings body) construct that is later handled efficiently by the closure conversion phase.
-                                let-void-set-conversion
-                                expr))
+               fixing-letrec
                expr))
