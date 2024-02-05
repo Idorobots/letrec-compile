@@ -1,3 +1,5 @@
+#lang racket
+
 ;; This conversion combines the best of three(?) worlds by using SCC reordering and mutation.
 
 ;; It begins much like the SCC-based conversion by reordering bindings and concentrating them into strongly connected components.
@@ -33,10 +35,12 @@
 
 ;; The fix expression can be either handled much like in the fixpoint conversion, or directly during the closure conversion phase by allocating a fat closure for all of these functions.
 
-(load "utils.scm")
-(load "scc.scm")
-(load "fixpoint.scm")
-(load "let-void-set.scm")
+(require "utils.rkt")
+(require "scc.rkt")
+(require "fixpoint.rkt")
+(require "let-void-set.rkt")
+
+(provide (all-defined-out))
 
 (define (waddell fix let-void-set expr)
   (let* ((bindings (letrec-bindings expr))

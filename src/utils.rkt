@@ -1,4 +1,8 @@
+#lang racket
+
 ;; Some utils.
+
+(provide (all-defined-out))
 
 ;; (let bindings body)
 
@@ -93,13 +97,13 @@
 
 ;; Evaluation helper
 
-(define (eval-after-conversion f expr)
+(define (eval-after-conversion env f expr)
   (display "Expression:") (newline)
   (pretty-print expr) (newline)
   (display "Conversion:") (newline)
   (let ((converted (f expr)))
     (pretty-print converted) (newline)
     (display "Result:") (newline)
-    (let ((result (eval converted)))
+    (let ((result (eval converted env)))
       (pretty-print result) (newline)
       result)))

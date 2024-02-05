@@ -1,5 +1,7 @@
-(load "../test/testing.scm")
-(load "../src/utils.scm")
+#lang racket
+
+(require "testing.rkt")
+(require "../src/utils.rkt")
 
 ;; Some examples:
 

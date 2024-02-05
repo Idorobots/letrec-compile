@@ -1,3 +1,5 @@
+#lang racket
+
 ;; This conversion uses the generalized Y combinator in order to implement recursion without circularity or mutation.
 
 ;; The conversion is performed in multiple steps, starting with the input code:
@@ -148,7 +150,9 @@
 ;;         (b ((b+ a+ b)+)))
 ;;     (cons a b)))                                            ;; Same as original
 
-(load "utils.scm")
+(require "utils.rkt")
+
+(provide (all-defined-out))
 
 (define (rebound-vars vars all-vars)
   (map (lambda (v)

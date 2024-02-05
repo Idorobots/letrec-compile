@@ -1,3 +1,5 @@
+#lang racket
+
 ;; The trivial transformation that converts letrec into a let-void-set! construction.
 
 ;; This transformation makes use of mutation. It separates the variable creation from the actual value creation,
@@ -15,7 +17,9 @@
 ;;   (set! bar bar-value)
 ;;   body)
 
-(load "utils.scm")
+(require "utils.rkt")
+
+(provide (all-defined-out))
 
 ;; A "special" void value that indicates an unbound variable.
 (define (void)

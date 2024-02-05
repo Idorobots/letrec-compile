@@ -1,3 +1,7 @@
+#lang racket
+
+(provide (all-defined-out))
+
 ;; Some testing utils.
 
 (define (is a b)

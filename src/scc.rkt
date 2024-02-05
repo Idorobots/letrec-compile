@@ -1,3 +1,4 @@
+#lang racket
 ;; This conversion uses topological sort on a strongly-connected components DAG of the input letrec in order to "untangle" the recursive definitions as much as possible.
 
 ;; This method levredges the fact that binding sets usually are sparsly connected by recursion, meaning they can be reordered to construct much smaller sets of bindings that can be handled separately.
@@ -34,8 +35,10 @@
 
 ;; ...which is considerably simpler to compile and optimize.
 
-(load "utils.scm")
-(load "fixpoint.scm")
+(require "utils.rkt")
+(require "fixpoint.rkt")
+
+(provide (all-defined-out))
 
 ;; ((a b) (a c) (b c) (c a)) -> ((b a) (c a) (c b) (a c))
 (define (transpose g)

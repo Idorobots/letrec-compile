@@ -1,9 +1,16 @@
-(load "../test/testing.scm")
-(load "../src/let-void-set.scm")
+#lang racket
+
+(require "testing.rkt")
+(require "../src/let-void-set.rkt")
+(require "../src/utils.rkt")
+
+(define-namespace-anchor anc)
+(define ns (namespace-anchor->namespace anc))
 
 ;; Conversion:
 
 (is (eval-after-conversion
+     ns
      let-void-set-conversion
      '(letrec ((foo 'foo-value)
                (bar 'bar-value))
@@ -11,11 +18,13 @@
     'body)
 
 (is (eval-after-conversion
+     ns
      let-void-set-conversion
      '(letrec () '()))
     '())
 
 (is (eval-after-conversion
+     ns
      let-void-set-conversion
      '(letrec ((foo 23)
                (bar (+ 5 foo)))
@@ -23,6 +32,7 @@
     28)
 
 (is (eval-after-conversion
+     ns
      let-void-set-conversion
      '(letrec ((bar (lambda (x) (+ x foo)))
                (foo (+ 23 5)))
@@ -30,6 +40,7 @@
     33)
 
 (is (eval-after-conversion
+     ns
      let-void-set-conversion
      '(letrec* ((bar (lambda (x) (+ x foo)))
                 (foo (+ 23 5)))
@@ -37,6 +48,7 @@
     33)
 
 (is (eval-after-conversion
+     ns
      let-void-set-conversion
      '(letrec ((foo (lambda (x) (* x 23)))
                (bar (lambda (y) (foo y))))
@@ -44,6 +56,7 @@
     (* 23 23))
 
 (is (eval-after-conversion
+     ns
      let-void-set-conversion
      '(letrec ((a (lambda () (b)))
                (b (lambda () (begin (c) (d))))
@@ -54,6 +67,7 @@
     23)
 
 (is (eval-after-conversion
+     ns
      let-void-set-conversion
      '(letrec ((even? (lambda (x)
                         (or (zero? x)
@@ -67,6 +81,7 @@
     (list #f #t #t #f))
 
 (is (eval-after-conversion
+     ns
      let-void-set-conversion
      '(letrec ((f (lambda () (even? 5)))
                (even? (lambda (x)(or (zero? x) (odd? (- x 1)))))
@@ -76,6 +91,7 @@
     #f)
 
 (is (eval-after-conversion
+     ns
      let-void-set-conversion
      '(letrec ((one (lambda ()
                       (+ 1 (two))))
@@ -87,6 +103,7 @@
     6)
 
 (is (eval-after-conversion
+     ns
      let-void-set-conversion
      '(letrec ((lazy-23 (cons 23 (lambda () lazy-23)))
                (lazy-take (lambda (list n)
@@ -103,6 +120,7 @@
 
 (is (time
      (eval-after-conversion
+      ns
       let-void-set-conversion
       '(letrec ((fib (lambda (n)
                        (if (< n 1)

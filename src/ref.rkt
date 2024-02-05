@@ -1,9 +1,13 @@
+#lang racket
+
 ;; Much like fixpoint mixed with let-void-set except it relies on boxing instead of thunking. Also SCC.
 
-(load "utils.scm")
-(load "fixpoint.scm")
-(load "scc.scm")
-(load "fixing-letrec.scm")
+(require "utils.rkt")
+(require "fixpoint.rkt")
+(require "scc.rkt")
+(require "fixing-letrec.rkt")
+
+(provide (all-defined-out))
 
 (define (ref)
   (vector '()))

@@ -1,5 +1,11 @@
-(load "../test/testing.scm")
-(load "../src/scc.scm")
+#lang racket
+
+(require "testing.rkt")
+(require "../src/scc.rkt")
+(require "../src/utils.rkt")
+
+(define-namespace-anchor anc)
+(define ns (namespace-anchor->namespace anc))
 
 ;; SCC
 
@@ -74,6 +80,7 @@
 ;; Conversion:
 
 (is (eval-after-conversion
+     ns
      scc-conversion
      '(letrec ((foo 'foo-value)
                (bar 'bar-value))
@@ -81,11 +88,13 @@
     'body)
 
 (is (eval-after-conversion
+     ns
      scc-conversion
      '(letrec () '()))
     '())
 
 (is (eval-after-conversion
+     ns
      scc-conversion
      '(letrec ((foo 23)
                (bar (+ 5 foo)))
@@ -93,6 +102,7 @@
     28)
 
 (is (eval-after-conversion
+     ns
      scc-conversion
      '(letrec ((bar (lambda (x) (+ x foo)))
                (foo (+ 23 5)))
@@ -100,6 +110,7 @@
     33)
 
 (is (eval-after-conversion
+     ns
      scc-conversion
      '(letrec* ((bar (lambda (x) (+ x foo)))
                 (foo (+ 23 5)))
@@ -107,6 +118,7 @@
     33)
 
 (is (eval-after-conversion
+     ns
      scc-conversion
      '(letrec ((foo (lambda (x) (* x 23)))
                (bar (lambda (y) (foo y))))
@@ -114,6 +126,7 @@
     (* 23 23))
 
 (is (eval-after-conversion
+     ns
      scc-conversion
      '(letrec ((a (lambda () (b)))
                (b (lambda () (begin (c) (d))))
@@ -124,6 +137,7 @@
     23)
 
 (is (eval-after-conversion
+     ns
      scc-conversion
      '(letrec ((even? (lambda (x)
                         (or (zero? x)
@@ -137,6 +151,7 @@
     (list #f #t #t #f))
 
 (is (eval-after-conversion
+     ns
      scc-conversion
      '(letrec ((f (lambda () (even? 5)))
                (even? (lambda (x)(or (zero? x) (odd? (- x 1)))))
@@ -146,6 +161,7 @@
     #f)
 
 (is (eval-after-conversion
+     ns
      scc-conversion
      '(letrec ((one (lambda ()
                       (+ 1 (two))))
